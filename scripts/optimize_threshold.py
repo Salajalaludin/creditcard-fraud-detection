@@ -18,8 +18,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from policy_reports import BUSINESS_SCENARIOS, build_policy_recommendations
-
 from fraud_detection.config import (  # noqa: E402
     DEFAULT_DATA_PATH,
     MODELS_DIR,
@@ -33,6 +31,7 @@ from fraud_detection.data import (  # noqa: E402
     stratified_train_validation_test_split,
 )
 from fraud_detection.evaluation import classification_metrics  # noqa: E402
+from fraud_detection.policy_reports import BUSINESS_SCENARIOS, build_policy_recommendations  # noqa: E402
 from fraud_detection.risk import risk_level_boundaries, score_transactions  # noqa: E402
 from fraud_detection.threshold import build_threshold_table  # noqa: E402
 

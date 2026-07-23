@@ -5,7 +5,7 @@ import pandas as pd
 
 from fraud_detection.risk import risk_level_boundaries, score_transactions
 from fraud_detection.threshold import add_business_costs, build_threshold_table, select_best_threshold
-from scripts.policy_reports import BUSINESS_SCENARIOS, build_policy_recommendations
+from fraud_detection.policy_reports import BUSINESS_SCENARIOS, build_policy_recommendations
 
 
 def test_threshold_table_confusion_counts() -> None:
