@@ -10,8 +10,6 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_ROOT / ".matplotlib"))
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
 import joblib
 import matplotlib
 
@@ -109,16 +107,8 @@ def main() -> None:
         json.dumps(production_config, indent=2), encoding="utf-8"
     )
 
-    # Gabungkan hasil tuning untuk visual ringkas pada dashboard dan laporan.
-    advanced = pd.read_csv(REPORTS_DIR / "advanced_tuning_validation.csv")
-    booster = pd.read_csv(REPORTS_DIR / "boosting_ensemble_validation.csv")
-    comparison = pd.concat(
-        [
-            advanced.assign(search_round="advanced"),
-            booster.assign(search_round="boosting"),
-        ],
-        ignore_index=True,
-    )
+    # Simpan hasil tuning aktif untuk visual ringkas pada dashboard dan laporan.
+    comparison = pd.read_csv(REPORTS_DIR / "advanced_tuning_validation.csv")
     comparison.to_csv(REPORTS_DIR / "tuning_comparison.csv", index=False)
     top_plot = (
         comparison.sort_values("f1", ascending=False)

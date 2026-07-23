@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -23,8 +22,6 @@ import seaborn as sns
 from sklearn.metrics import precision_recall_curve
 
 # Tambahkan package lokal ketika script dijalankan tanpa `pip install -e .`.
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
 from fraud_detection.config import (  # noqa: E402
     DEFAULT_DATA_PATH,
     FIGURES_DIR,
@@ -126,7 +123,7 @@ def main() -> None:
         "default_threshold": 0.5,
         "random_state": RANDOM_STATE,
         "candidate_models": [name for name, _ in candidate_items],
-        "data_quality": quality.to_dict(),
+        "data_quality": quality,
         "split": {
             "train_rows": len(x_train),
             "validation_rows": len(x_validation),
@@ -177,4 +174,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

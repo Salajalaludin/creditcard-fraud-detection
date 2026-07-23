@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_ROOT / ".matplotlib"))
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
 import joblib
 import matplotlib
 
@@ -63,6 +60,7 @@ def main() -> None:
     top = importance.head(15).sort_values("permutation_importance_mean")
     fig, ax = plt.subplots(figsize=(9, 6))
     sns.barplot(data=top, x="permutation_importance_mean", y="feature", color="#3D8DFF", ax=ax)
+    ax.bar_label(ax.containers[0], fmt="%.4f", label_type="center", color="white", fontsize=8, fontweight="bold")
     ax.set(title="Active Model — Permutation Importance", xlabel="Mean decrease in validation PR-AUC", ylabel="Feature")
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "feature_importance.png", dpi=160)
@@ -72,4 +70,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

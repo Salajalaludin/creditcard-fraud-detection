@@ -139,7 +139,7 @@ The dashboard downloads the bundle at startup and verifies its checksum before l
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-The current test suite has 19 passing tests with 85% source coverage. GitHub Actions runs the tests again after each push or pull request.
+The current test suite has 20 passing tests. GitHub Actions runs the tests again after each push or pull request.
 
 ## 🗂️ Project structure
 
@@ -161,7 +161,6 @@ Large datasets, trained models, generated reports, deployment ZIP files, and pre
 The repository also includes optional scripts for:
 
 - Advanced model tuning and ensembles.
-- Probability calibration.
 - Pseudo out-of-time evaluation.
 - Isolation Forest anomaly detection.
 - Permutation feature importance.

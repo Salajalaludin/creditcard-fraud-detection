@@ -17,15 +17,9 @@ import joblib
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from fraud_detection.config import (  # noqa: E402
     DEFAULT_DATA_PATH,
-    FIGURES_DIR,
     MODELS_DIR,
     PREDICTIONS_DIR,
     REPORTS_DIR,
@@ -37,39 +31,9 @@ from fraud_detection.data import (  # noqa: E402
     stratified_train_validation_test_split,
 )
 from fraud_detection.evaluation import classification_metrics  # noqa: E402
+from fraud_detection.policy_reports import BUSINESS_SCENARIOS, build_policy_recommendations  # noqa: E402
 from fraud_detection.risk import risk_level_boundaries, score_transactions  # noqa: E402
-from fraud_detection.threshold import (  # noqa: E402
-    add_business_costs,
-    build_threshold_table,
-    select_best_threshold,
-)
-
-
-# Asumsi biaya bersifat transparan dan dapat diganti ketika angka bisnis tersedia.
-# Semua nilai memakai unit mata uang yang sama dengan kolom Amount.
-BUSINESS_SCENARIOS = {
-    "aggressive": {
-        "investigation_cost": 5.0,
-        "false_positive_cost": 5.0,
-        "fixed_false_negative_cost": 500.0,
-        "fraud_amount_multiplier": 1.0,
-        "minimum_recall": 0.90,
-    },
-    "balanced": {
-        "investigation_cost": 10.0,
-        "false_positive_cost": 10.0,
-        "fixed_false_negative_cost": 300.0,
-        "fraud_amount_multiplier": 1.0,
-        "minimum_recall": 0.80,
-    },
-    "customer_friendly": {
-        "investigation_cost": 20.0,
-        "false_positive_cost": 30.0,
-        "fixed_false_negative_cost": 200.0,
-        "fraud_amount_multiplier": 1.0,
-        "minimum_recall": 0.60,
-    },
-}
+from fraud_detection.threshold import build_threshold_table  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -108,50 +72,7 @@ def main() -> None:
         validation_probabilities,
         x_validation["Amount"].to_numpy(),
     )
-    threshold_table.to_csv(REPORTS_DIR / "threshold_analysis.csv", index=False)
-
-    # Buat rekomendasi statistik yang tidak bergantung pada asumsi biaya.
-    max_f1 = threshold_table.sort_values(["f1", "precision"], ascending=False).iloc[0]
-    recall_80 = (
-        threshold_table.loc[threshold_table["recall"] >= 0.80]
-        .sort_values(["precision", "alerts"], ascending=[False, True])
-        .iloc[0]
-    )
-    alert_cap_500 = (
-        threshold_table.loc[threshold_table["alerts"] <= 500]
-        .sort_values(["recall", "precision"], ascending=False)
-        .iloc[0]
-    )
-
-    recommendation_rows = [
-        {"strategy": "max_f1", **max_f1.to_dict()},
-        {"strategy": "minimum_recall_80", **recall_80.to_dict()},
-        {"strategy": "maximum_500_alerts", **alert_cap_500.to_dict()},
-    ]
-
-    # Evaluasi tiga skenario biaya dan pilih threshold termurah yang tetap
-    # memenuhi minimum recall pada masing-masing skenario.
-    cost_tables: dict[str, pd.DataFrame] = {}
-    for scenario_name, assumptions in BUSINESS_SCENARIOS.items():
-        cost_table = add_business_costs(
-            threshold_table,
-            investigation_cost=assumptions["investigation_cost"],
-            false_positive_cost=assumptions["false_positive_cost"],
-            fixed_false_negative_cost=assumptions["fixed_false_negative_cost"],
-            fraud_amount_multiplier=assumptions["fraud_amount_multiplier"],
-        )
-        cost_tables[scenario_name] = cost_table
-        selected = select_best_threshold(cost_table, assumptions["minimum_recall"])
-        recommendation_rows.append(
-            {
-                "strategy": f"business_{scenario_name}",
-                **selected.to_dict(),
-                **{f"assumption_{key}": value for key, value in assumptions.items()},
-            }
-        )
-
-    recommendations = pd.DataFrame(recommendation_rows)
-    recommendations.to_csv(REPORTS_DIR / "threshold_recommendations.csv", index=False)
+    recommendations, _ = build_policy_recommendations(threshold_table)
 
     # Skenario yang dipilih melalui CLI menjadi threshold operasional utama.
     selected_strategy = f"business_{args.scenario}"
@@ -210,33 +131,6 @@ def main() -> None:
     )
     investigation_queue.insert(0, "queue_rank", range(1, len(investigation_queue) + 1))
     investigation_queue.to_csv(PREDICTIONS_DIR / "investigation_queue.csv", index=False)
-
-    # Plot trade-off threshold dan metrik utama.
-    sns.set_theme(style="whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-    axes[0].plot(threshold_table["threshold"], threshold_table["precision"], label="Precision")
-    axes[0].plot(threshold_table["threshold"], threshold_table["recall"], label="Recall")
-    axes[0].plot(threshold_table["threshold"], threshold_table["f1"], label="F1")
-    axes[0].axvline(selected_threshold, color="black", linestyle="--", label="Selected")
-    axes[0].set(title="Validation Metrics vs Threshold", xlabel="Threshold", ylabel="Metric")
-    axes[0].legend()
-    axes[1].plot(threshold_table["threshold"], threshold_table["alerts"], color="#c96f3b")
-    axes[1].axvline(selected_threshold, color="black", linestyle="--")
-    axes[1].set(title="Validation Alert Volume", xlabel="Threshold", ylabel="Alerts")
-    fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "threshold_tradeoff.png", dpi=160)
-    plt.close(fig)
-
-    # Plot sensitivity biaya untuk seluruh skenario.
-    fig, ax = plt.subplots(figsize=(9, 5.5))
-    for scenario_name, cost_table in cost_tables.items():
-        ax.plot(cost_table["threshold"], cost_table["total_cost"], label=scenario_name)
-    ax.axvline(selected_threshold, color="black", linestyle="--", label="Selected")
-    ax.set(title="Business Cost Sensitivity", xlabel="Threshold", ylabel="Estimated total cost")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "business_cost_sensitivity.png", dpi=160)
-    plt.close(fig)
 
     # Refresh menambahkan model_id/hash dan memastikan dashboard tidak memakai artefak stale.
     subprocess.run(

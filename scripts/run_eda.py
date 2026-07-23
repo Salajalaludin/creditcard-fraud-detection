@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 from pathlib import Path
 
 # Cari root project dari lokasi script, lalu arahkan cache Matplotlib ke dalam
@@ -22,8 +21,6 @@ import pandas as pd
 import seaborn as sns
 
 # Tambahkan folder src agar package lokal dapat dipakai tanpa instalasi editable.
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
 from fraud_detection.config import (  # noqa: E402
     DEFAULT_DATA_PATH,
     FIGURES_DIR,
@@ -209,7 +206,7 @@ def main() -> None:
     clean, quality = clean_transactions(raw)
 
     # Data-quality report selalu disimpan; clean CSV bersifat opsional.
-    save_json(quality.to_dict(), REPORTS_DIR / "data_quality.json")
+    save_json(quality, REPORTS_DIR / "data_quality.json")
     if not args.skip_clean_export:
         clean.to_csv(PROCESSED_DIR / "creditcard_clean.csv", index=False)
 
@@ -221,7 +218,7 @@ def main() -> None:
     build_figures(clean, tables)
 
     # Cetak ringkasan agar pengguna mendapat feedback saat menjalankan script.
-    print(json.dumps(quality.to_dict(), indent=2))
+    print(json.dumps(quality, indent=2))
     print(f"EDA selesai. Output: {REPORTS_DIR}")
 
 

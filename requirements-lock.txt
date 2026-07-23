@@ -9,8 +9,6 @@ seaborn==0.13.2
 joblib==1.5.3
 streamlit==1.59.2
 xgboost==3.3.0
-lightgbm==4.6.0
-catboost==1.2.10
 jupyterlab==4.6.1
 ipykernel==6.31.0
 pytest==8.4.2

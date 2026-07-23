@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 import json
-import sys
-from pathlib import Path
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.preprocessing import StandardScaler
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from fraud_detection.config import DEFAULT_DATA_PATH, RANDOM_STATE, REPORTS_DIR  # noqa: E402
 from fraud_detection.data import clean_transactions, load_transactions, stratified_train_validation_test_split  # noqa: E402
@@ -63,4 +58,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

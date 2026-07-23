@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -25,8 +24,6 @@ from sklearn.metrics import ConfusionMatrixDisplay, precision_recall_curve
 from sklearn.pipeline import Pipeline
 
 # Memungkinkan import package lokal ketika script dijalankan langsung.
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
 from fraud_detection.config import (  # noqa: E402
     DEFAULT_DATA_PATH,
     FIGURES_DIR,
@@ -208,7 +205,7 @@ def main() -> None:
         "selection_metric": "validation_pr_auc",
         "threshold": 0.5,
         "random_state": RANDOM_STATE,
-        "data_quality": quality.to_dict(),
+        "data_quality": quality,
         "split": {
             "train_rows": len(x_train),
             "validation_rows": len(x_validation),

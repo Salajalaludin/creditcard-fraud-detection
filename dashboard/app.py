@@ -109,11 +109,36 @@ def render_overview(scored: pd.DataFrame, metrics: dict) -> None:
     amount_columns[2].metric("Average risk score", f"{scored['risk_score'].mean():.2f}")
     amount_columns[3].metric("Critical transactions", f"{int((scored['risk_level'] == 'Critical').sum()):,}")
 
-    # Gunakan urutan risiko tetap supaya chart konsisten walau suatu level kosong.
+    # Bar horizontal dan skala symlog menjaga level kecil tetap terlihat.
     order = ["Low", "Medium", "High", "Critical"]
+    risk_summary = pd.DataFrame(
+        {
+            "risk_level": order,
+            "transactions": scored["risk_level"].value_counts().reindex(order, fill_value=0).to_numpy(),
+            "average_amount": scored.groupby("risk_level", observed=False)["Amount"].mean().reindex(order).fillna(0).to_numpy(),
+        }
+    )
+
+    def risk_chart(field: str, title: str, axis_title: str, scale: str, number_format: str) -> dict:
+        encoding = {
+            "x": {"field": field, "type": "quantitative", "scale": {"type": scale}, "axis": {"title": axis_title}},
+            "y": {"field": "risk_level", "type": "ordinal", "sort": order, "axis": {"title": None}},
+        }
+        return {
+            "title": title,
+            "height": 280,
+            "layer": [
+                {"mark": {"type": "bar", "color": "#0E6FCA", "cornerRadiusEnd": 3}, "encoding": encoding},
+                {
+                    "mark": {"type": "text", "align": "right", "dx": -6, "color": "white", "fontWeight": "bold"},
+                    "encoding": {**encoding, "text": {"field": field, "type": "quantitative", "format": number_format}},
+                },
+            ],
+        }
+
     left, right = st.columns(2)
-    left.bar_chart(scored["risk_level"].value_counts().reindex(order, fill_value=0))
-    right.bar_chart(scored.groupby("risk_level", observed=False)["Amount"].mean().reindex(order))
+    left.vega_lite_chart(risk_summary, risk_chart("transactions", "Transaction volume by risk level", "Transactions (symlog scale)", "symlog", ",.0f"), width="stretch")
+    right.vega_lite_chart(risk_summary, risk_chart("average_amount", "Average transaction amount by risk level", "Average amount", "linear", ",.2f"), width="stretch")
 
 
 def render_queue(queue: pd.DataFrame) -> None:

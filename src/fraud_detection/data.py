@@ -2,41 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from .config import FEATURE_COLUMNS, RANDOM_STATE, TARGET
-
-
-@dataclass(frozen=True)
-class DataQualityReport:
-    """Struktur ringkas hasil audit sebelum dan sesudah cleaning.
-
-    `frozen=True` mencegah nilai laporan berubah tanpa sengaja setelah dibuat.
-    """
-
-    # Statistik dataset mentah.
-    rows_raw: int
-    columns: int
-    missing_cells: int
-    exact_duplicates: int
-    fraud_count_raw: int
-    normal_count_raw: int
-    fraud_rate_raw: float
-
-    # Statistik dataset setelah exact duplicates dihapus.
-    rows_clean: int
-    duplicates_removed: int
-    fraud_count_clean: int
-    normal_count_clean: int
-    fraud_rate_clean: float
-
-    def to_dict(self) -> dict[str, int | float]:
-        """Ubah dataclass menjadi dictionary agar mudah disimpan sebagai JSON."""
-        return asdict(self)
 
 
 def load_transactions(path: str | Path) -> pd.DataFrame:
@@ -75,7 +46,7 @@ def load_transactions(path: str | Path) -> pd.DataFrame:
     return frame
 
 
-def clean_transactions(frame: pd.DataFrame) -> tuple[pd.DataFrame, DataQualityReport]:
+def clean_transactions(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int | float]]:
     """Hapus exact duplicates dan hasilkan laporan audit.
 
     Duplikat dihapus sebelum split agar transaksi identik tidak masuk ke dua
@@ -92,20 +63,20 @@ def clean_transactions(frame: pd.DataFrame) -> tuple[pd.DataFrame, DataQualityRe
     clean_counts = clean[TARGET].value_counts().reindex([0, 1], fill_value=0)
 
     # Gabungkan statistik sebelum dan sesudah cleaning dalam satu objek audit.
-    report = DataQualityReport(
-        rows_raw=len(frame),
-        columns=frame.shape[1],
-        missing_cells=missing_cells,
-        exact_duplicates=duplicate_count,
-        fraud_count_raw=int(raw_counts[1]),
-        normal_count_raw=int(raw_counts[0]),
-        fraud_rate_raw=float(raw_counts[1] / len(frame)),
-        rows_clean=len(clean),
-        duplicates_removed=duplicate_count,
-        fraud_count_clean=int(clean_counts[1]),
-        normal_count_clean=int(clean_counts[0]),
-        fraud_rate_clean=float(clean_counts[1] / len(clean)),
-    )
+    report = {
+        "rows_raw": len(frame),
+        "columns": frame.shape[1],
+        "missing_cells": missing_cells,
+        "exact_duplicates": duplicate_count,
+        "fraud_count_raw": int(raw_counts[1]),
+        "normal_count_raw": int(raw_counts[0]),
+        "fraud_rate_raw": float(raw_counts[1] / len(frame)),
+        "rows_clean": len(clean),
+        "duplicates_removed": duplicate_count,
+        "fraud_count_clean": int(clean_counts[1]),
+        "normal_count_clean": int(clean_counts[0]),
+        "fraud_rate_clean": float(clean_counts[1] / len(clean)),
+    }
     return clean, report
 
 

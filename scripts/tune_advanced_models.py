@@ -5,15 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
 # Batasi deteksi core joblib yang bermasalah pada sebagian environment Windows.
 os.environ.setdefault("LOKY_MAX_CPU_COUNT", str(os.cpu_count() or 4))
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 import joblib
 import numpy as np
@@ -297,4 +293,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -27,7 +27,7 @@ def test_clean_transactions_removes_exact_duplicates() -> None:
     duplicated = pd.concat([frame, frame.iloc[[0]]], ignore_index=True)
     clean, report = clean_transactions(duplicated)
     assert len(clean) == len(frame)
-    assert report.duplicates_removed == 1
+    assert report["duplicates_removed"] == 1
 
 
 def test_stratified_split_is_disjoint_and_preserves_rows() -> None:
@@ -44,4 +44,3 @@ def test_chronological_split_respects_time_order() -> None:
     train, validation, test = parts[:3]
     assert train["Time"].max() < validation["Time"].min()
     assert validation["Time"].max() < test["Time"].min()
-

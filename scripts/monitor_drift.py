@@ -3,13 +3,8 @@
 from __future__ import annotations
 
 import json
-import sys
-from pathlib import Path
 
 import pandas as pd
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from fraud_detection.config import DEFAULT_DATA_PATH, FEATURE_COLUMNS, REPORTS_DIR  # noqa: E402
 from fraud_detection.data import clean_transactions, load_transactions, stratified_train_validation_test_split  # noqa: E402
@@ -42,4 +37,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
